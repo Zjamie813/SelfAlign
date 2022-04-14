@@ -81,7 +81,7 @@ For Flickr30K:
 
 ```bash
 
-python train.py --data_path $DATA_PATH --bert_path $BERT_PATH --logger_name runs/flickr --data_name f30k_precomp --lr_update 10
+python train.py --data_path $DATA_PATH --logger_name runs/flickr --data_name f30k_precomp --lr_update 10
 
 ```
 
@@ -89,7 +89,7 @@ For MSCOCO:
 
 ```bash
 
-python train.py --data_path $DATA_PATH --bert_path $BERT_PATH --logger_name runs/coco --data_name coco_precomp --lr_update 15
+python train.py --data_path $DATA_PATH --logger_name runs/coco --data_name coco_precomp --lr_update 15
 
 ```
 ###  Evaluate trained models  
