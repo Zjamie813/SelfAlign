@@ -2,7 +2,7 @@ import torch
 import torch.utils.data as data
 import os
 import nltk
-# from pycocotools.coco import COCO
+from pycocotools.coco import COCO
 import tokenization
 import numpy as np
 
