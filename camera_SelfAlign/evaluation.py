@@ -7,10 +7,9 @@ import numpy
 from data import get_test_loader
 import time
 import numpy as np
-from model import CAMERA
+from model_SelfAlign import CAMERA
 from collections import OrderedDict
 from tqdm import tqdm
-print('evaluation import model...........')
 
 
 class AverageMeter(object):
@@ -91,20 +90,25 @@ def encode_data(model, data_loader, log_step=10, logging=print):
         model.logger = val_logger
         ids = batch_data[5]
         # compute the embeddings
-        # img_emb, cap_emb, _ = model.forward_emb(batch_data, volatile=True)
-        img_emb, cap_emb, smry_mat, img_loc_emb, cap_loc_emb, img_ctx_emb, cap_ctx_emb = model.forward_emb(batch_data, volatile=True)
+        img_emb, cap_emb, smry_mat, img_fc_emb, cap_local_emb, \
+        img_atd_glo, cap_atd_glo, img_locals, cap_locals, img_ctx_fea_fuse, cap_ctx_fea_fuse = model.forward_emb(batch_data,volatile=True)
+        bs, num_view = img_emb.size()[:2]
 
-        # initialize the numpy arrays given the size of the embeddings
-        img_ctx_emb = torch.mean(img_ctx_emb, dim=1)
-        cap_ctx_emb = torch.mean(cap_ctx_emb, dim=1)
+        
+        img_ctx_v1 = torch.mean(img_locals, dim=1)
+        cap_ctx_v2 = torch.mean(cap_locals, dim=1)
+        img_ctx_fea = torch.cat((img_ctx_v1, img_ctx_fea_fuse), dim=-1)
+        cap_ctx_fea = torch.cat((cap_ctx_fea_fuse, cap_ctx_v2), dim=-1)
+
+        # bidirectional triplet ranking loss
+        img_emb = torch.cat((img_emb, img_ctx_fea.unsqueeze(1).expand(bs, num_view, -1)), dim=-1)
+        cap_emb = torch.cat((cap_emb, cap_ctx_fea), dim=-1)
+        
         if no_init:
             no_init = False
             img = np.zeros((len(data_loader.dataset), img_emb.size(1), img_emb.size(2)), dtype=np.float32)
             cap = np.zeros((len(data_loader.dataset), cap_emb.size(1)), dtype=np.float32)
-            # img_region_feas = np.zeros((len(data_loader.dataset), img_loc_emb.size(1), img_loc_emb.size(2)),
-            #                            dtype=np.float32)
-            # txt_token_feas = np.zeros((len(data_loader.dataset), cap_loc_emb.size(1), cap_loc_emb.size(2)),
-            #                           dtype=np.float32)
+         
             img_ctx_feas = np.zeros((len(data_loader.dataset), img_ctx_emb.size(1)),
                                        dtype=np.float32)
             txt_ctx_feas = np.zeros((len(data_loader.dataset), cap_ctx_emb.size(1)),
@@ -113,21 +117,8 @@ def encode_data(model, data_loader, log_step=10, logging=print):
         # preserve the embeddings by copying from gpu and converting to numpy
         img[ids] = img_emb.detach().cpu().numpy().copy()
         cap[ids] = cap_emb.data.cpu().numpy().copy()
-        # img_region_feas[ids] = img_loc_emb.detach().cpu().numpy().copy()
-        # txt_token_feas[ids] = cap_loc_emb.detach().cpu().numpy().copy()
-        img_ctx_feas[ids] = img_ctx_emb.detach().cpu().numpy().copy()
-        txt_ctx_feas[ids] = cap_ctx_emb.detach().cpu().numpy().copy()
 
         del batch_data
-
-    # np.save('f30k_500_img_region_feas.npy', img_region_feas)
-    # np.save('f30k_500_txt_token_feas.npy', txt_token_feas)
-    # print('save final img embeding,the shape is{}'.format(img_region_feas.shape))
-    # print('save final cap embeding,the shape is{}'.format(txt_token_feas.shape))
-    # np.save('f30k_500_img_ctx_feas.npy', img_ctx_feas)
-    # np.save('f30k_500_txt_ctx_feas.npy', txt_ctx_feas)
-    # print('save final img embeding,the shape is{}'.format(img_ctx_feas.shape))
-    # print('save final cap embeding,the shape is{}'.format(txt_ctx_feas.shape))
 
     return img, cap
 
