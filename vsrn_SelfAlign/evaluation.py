@@ -10,13 +10,10 @@ import time
 import numpy as np
 from tqdm import tqdm
 
-from vsrn_scratrch.model_loc_correct_output_add_ctx import VSRN
-from vsrn_scratrch.evaluation_full import AverageMeter, LogCollector, encode_data, calItr,i2t_cmr,t2i_cmr
-# from vsrn_init.model import VSRN
-# from vsrn_init.evaluation import AverageMeter, LogCollector, encode_data
-# from vsrn_scratrch.evaluation_full import calItr,i2t_cmr,t2i_cmr
+from model_SelfAlign import VSRN
+from evaluation_SelfAlign import AverageMeter, LogCollector, encode_data, calItr,i2t_cmr,t2i_cmr
 from collections import OrderedDict
-# from misc.utils import print_options
+from misc.utils import print_options
 
 import time
 
@@ -37,12 +34,10 @@ def evalrank_single(model_path, data_path=None, split='test', fold5=False):
     ckpt_model = checkpoint['model']
     # load model state
     model.load_state_dict(ckpt_model)
-    # total = sum([param.nelement() for param in model.params])
-    x = 1024*1024
+
     total_trainable_parameters = sum(p.numel() for p in model.params if p.requires_grad)
     print(total_trainable_parameters)
     # print('Number of parameter: %.2fM'.format(total_trainable_parameters/1e6))
-    # print("" % (total / 1e6))
 
     print('Loading dataset')
     data_loader = get_test_loader(split, opt.data_name, vocab, opt.crop_size,
