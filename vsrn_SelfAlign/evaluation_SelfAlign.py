@@ -87,8 +87,17 @@ def encode_data(model, data_loader, log_step=10, logging=print):
         model.logger = val_logger
 
         # compute the embeddings
-        img_emb, cap_emb, fc_img_emd = model.forward_emb(images, captions, lengths,
-                                             volatile=True)
+        img_emb, cap_emb, GCN_img_emd,img_fc_emb, cap_loc_feas,\
+        cap_atd_glo_fea, img_locals, cap_glo_ctx_fea, \
+        img_atd_glo, cap_locals, img_glo_ctx_fea = model.forward_emb(images, captions, lengths,volatile=True)
+
+        img_loc_ctx_fea = torch.mean(img_locals, dim=1)
+        cap_loc_ctx_fea = torch.mean(cap_locals, dim=1)
+        img_ctx_fea = torch.cat((img_glo_ctx_fea, img_loc_ctx_fea), dim=-1)
+        cap_ctx_fea = torch.cat((cap_loc_ctx_fea, cap_glo_ctx_fea), dim=-1)
+
+        img_emb = torch.cat((img_emb, img_ctx_fea), dim=-1)
+        cap_emb = torch.cat((cap_emb, cap_ctx_fea), dim=-1)
 
         # initialize the numpy arrays given the size of the embeddings
         if img_embs is None:
