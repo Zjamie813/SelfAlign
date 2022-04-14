@@ -4,7 +4,7 @@ import torchvision.transforms as transforms
 import os
 import nltk
 from PIL import Image
-# from pycocotools.coco import COCO
+from pycocotools.coco import COCO
 import numpy as np
 import json as jsonmod
 
