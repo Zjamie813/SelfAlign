@@ -13,7 +13,6 @@ class LCA_loss(nn.Module):
         self.v_prototypes = nn.Linear(in_dim, nmb_prototypes, bias=False)
 
     def distributed_sinkhorn(self, out, epsilon=0.05, sinkhorn_iterations=3):
-        '''https://github.com/facebookresearch/swav'''
         Q = torch.exp(out / epsilon).t()
         B = Q.shape[1]
         K = Q.shape[0]
@@ -85,8 +84,6 @@ class LCA_loss(nn.Module):
         return local_loss
 
 def CRA_loss(l, m, T=1, neg_num=None):
-    '''Computes the noise contrastive estimation-based loss, a.k.a. infoNCE.
-    https://github.com/rdevon/DIM/blob/master/cortex_DIM/functions/dim_losses.py
     Args:
         l: [B,dim,n_l],keys
         m: [B,dim,n_g],query
